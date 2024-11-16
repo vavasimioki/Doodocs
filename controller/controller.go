@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func ArchiveInformation(w http.ResponseWriter, r *http.Request, logger *slog.Logger) {
@@ -21,55 +22,52 @@ func ArchiveInformation(w http.ResponseWriter, r *http.Request, logger *slog.Log
 
 	file, header, err := r.FormFile("file")
 	if err != nil {
-		http.Error(w, "Internal Error", http.StatusInternalServerError)
-		logger.Error(err.Error())
+		serverError(w, "Internal Server Error")
+		logger.Error(err.Error(), "method", r.Method, "uri", r.RequestURI)
 		return
 	}
 	defer file.Close()
 
-	// fmt.Println("name", header.Filename)
-	// fmt.Println("zip size", float64(header.Size))
-	// z, err := zip.OpenReader(header.Filename)
-	// if err != nil {
-	// 	logger.Error(err.Error(), "openReading error")
-	// }
+	if !strings.HasSuffix(strings.ToLower(header.Filename), ".zip") {
+		httpError(w, "bad request", http.StatusBadRequest)
+		logger.Error("The file is not ZIP format", "filename", header.Filename, "uri", r.RequestURI)
+		return
+	}
 
-	// var totalsize float64
-	// for _, f := range z.File {
-	// 	fmt.Printf("filename %s\n", f.Name)
-	// 	// fmt.Printf("file_size %d\n", f.CompressedSize)
-	// 	fmt.Printf("file_size64 %d\n", f.CompressedSize64)
-	// 	totalsize += float64(f.CompressedSize64)
-	// 	fmt.Printf("total_size", totalsize)
-	// 	mymtipe := http.DetectContentType(f.Extra)
-	// 	fmt.Printf("file_mymtipe %s\n", mymtipe)
-	// }
-	GetInfo(file, header, logger)
+	archiveInfo, err := GetInfo(file, header)
+	if err != nil {
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Arch Info"))
+		serverError(w, "Internal Server Error")
+		logger.Error(err.Error())
+	}
+
+	EncodeOK(w, archiveInfo)
+
 }
-func GetInfo(file multipart.File, header *multipart.FileHeader, logger *slog.Logger) *models.ZipInfo {
+func GetInfo(file multipart.File, header *multipart.FileHeader) (*models.ZipInfo, error) {
 	tempFile := fmt.Sprintf(header.Filename)
+
 	createFile, err := os.Create(tempFile)
 	if err != nil {
-		logger.Error(err.Error(), "err creating file")
+		return nil, err
 	}
-	defer createFile.Close()
 
+	defer file.Close()
+	defer createFile.Close()
 	_, err = io.Copy(createFile, file)
 	if err != nil {
-		logger.Error(err.Error(), "error copying file")
-		return nil
+		return nil, err
 	}
 	filesZip, err := zip.OpenReader(tempFile)
 	if err != nil {
-		logger.Error(err.Error())
+		return nil, err
 	}
-	fmt.Printf("zipSize %d\n", header.Size)
-	fmt.Printf("zipName %s\n", header.Filename)
+
+	var data []models.FileInfo
+	zipSize := header.Size
+	zipName := header.Filename
 	var filesize_total float64
-	name := []string{}
+	var filesCount float64
 
 	for _, file := range filesZip.File {
 
@@ -78,92 +76,34 @@ func GetInfo(file multipart.File, header *multipart.FileHeader, logger *slog.Log
 		}
 		f, err := file.Open()
 		if err != nil {
-			logger.Error(err.Error(), "error openig file")
-			continue
+			return nil, err
 		}
 		defer f.Close()
 		buf := make([]byte, 512)
 		r, err := f.Read(buf)
 		if err != nil {
-			logger.Error(err.Error(), "error reading file")
-			continue
+			return nil, err
 		}
-		name = append(name, file.Name[0:])
-		fmt.Printf("file_name %s\n", file.Name[0:])
-		fmt.Printf("file_size64 %d\n", file.CompressedSize64)
-		fmt.Printf("mymtipe %s\n", http.DetectContentType([]byte(buf[:r])))
+		data = append(data, models.FileInfo{
+			File_path: file.Name,
+			Size:      float64(file.CompressedSize64),
+			Mimetype:  http.DetectContentType(buf[:r]),
+		})
+
 		filesize_total += float64(file.CompressedSize64)
 	}
-	if len(name) > 0 {
-		fmt.Printf("files_count %d\n", len(name))
+	if len(data) > 0 {
+		filesCount = float64(len(data))
 	}
-	fmt.Printf("file_size_total %f\n", filesize_total)
-	// absPath, err := filepath.Abs(tempFile)
-	// if err != nil {
-	// 	logger.Error(err.Error(), "error finding file path")
-	// 	return nil
-	// }
-	// fmt.Println(absPath)
-	return &models.ZipInfo{}
-	// defer file.Close()
-	// tmplPath := fmt.Sprintf("/tmp/%s", header.Filename)
+	fmt.Println(filesCount)
 
-	// c, err := os.Create(tmplPath)
-	// if err != nil {
-	// 	fmt.Printf("error creating %s\n", tmplPath)
-	// 	return &models.ZipInfo{}
-	// }
-	// defer c.Close()
+	return &models.ZipInfo{
+		Filename:     zipName,
+		Archive_size: float64(zipSize),
+		Total_files:  filesCount,
+		Files:        data,
+	}, nil
 
-	// _, err = io.Copy(c, file)
-	// if err != nil {
-	// 	fmt.Printf("error copying %s\n", file)
-	// 	return &models.ZipInfo{}
-	// }
-
-	// readfile, err := zip.OpenReader(tmplPath)
-	// if err != nil {
-	// 	log.Println(err)
-	// 	return &models.ZipInfo{}
-	// }
-	// data := &models.ZipInfo{
-	// 	Filename:     header.Filename,
-	// 	Archive_size: float64(header.Size),
-	// }
-	// for _, file := range readfile.File {
-	// 	f, err := file.Open()
-	// 	if err != nil {
-	// 		fmt.Println(err)
-	// 		continue
-	// 	}
-	// 	defer f.Close()
-	// 	buf := make([]byte, 512)
-	// 	r, err := f.Read(buf)
-	// 	if err != nil {
-	// 		fmt.Println(err)
-	// 		continue
-	// 	}
-	// 	if len(data.Files) > 0 {
-	// 		// Добавляем в существующий FileInfo
-	// 		data.Files[len(data.Files)-1].File_path = append(data.Files[len(data.Files)-1].File_path, file.Name)
-	// 	} else {
-	// 		// Создаём новую запись для FileInfo
-	// 		data.Files = append(data.Files, models.FileInfo{
-	// 			File_path: []string{file.Name}, // Инициализация списка путей
-	// 			Size:      float64(file.CompressedSize64),
-	// 			Mimetype:  http.DetectContentType(buf[:r]),
-	// 		})
-	// 	}
-
-	// 	name := file.Name
-	// 	fmt.Printf("file name %s\n", name)
-	// 	data.Total_size += float64(file.CompressedSize64)
-	// 	fmt.Printf("file total_size %f\n", data.Total_size)
-
-	// }
-	// data.Total_files = float64(len(readfile.File))
-	// fmt.Printf("total_files %f\n", data.Total_files)
-	// return data
 }
 
 func CreateArchive(w http.ResponseWriter, r *http.Request, logger *slog.Logger) {
