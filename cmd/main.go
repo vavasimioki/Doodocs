@@ -1,24 +1,28 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 
+	"aosmanova/doodocs/app"
 	"aosmanova/doodocs/controller"
 
 	"github.com/gorilla/mux"
 )
 
 func main() {
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	app := app.NewApplication(logger)
 	r := mux.NewRouter()
-	r.HandleFunc("/api/archive/info", controller.ArchiveInformation).Methods("POST")
-	r.HandleFunc("/api/archive/create", controller.CreateArchive).Methods("POST")
-	r.HandleFunc("/api/archive/mail/send", controller.ArchiveSend).Methods("POST")
+	r.HandleFunc("/api/archive/info", app.Handler(controller.ArchiveInformation)).Methods("POST")
+	r.HandleFunc("/api/archive/create", app.Handler(controller.CreateArchive)).Methods("POST")
+	r.HandleFunc("/api/archive/mail/send", app.Handler(controller.ArchiveSend)).Methods("POST")
 
-	log.Printf("http://localhost:8000")
+	logger.Info("http://localhost:8000")
 	err := http.ListenAndServe(":8000", r)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 	}
 
 	// srv := &http.Server{
