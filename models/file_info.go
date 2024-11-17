@@ -1,10 +1,5 @@
 package models
 
-type ErrorResponse struct {
-	// Statuscode string 	`json:"statuscode"`
-	Message string `json:"message"`
-}
-
 type ZipInfo struct {
 	Filename     string     `json:"filename"`
 	Archive_size float64    `json:"archive_size"`

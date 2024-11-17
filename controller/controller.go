@@ -4,6 +4,7 @@ import (
 	"aosmanova/doodocs/models"
 	"aosmanova/doodocs/service"
 	"archive/zip"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -125,7 +126,7 @@ func CreateArchive(w http.ResponseWriter, r *http.Request, logger *slog.Logger) 
 	var content string
 	for _, f := range fileHeader {
 		content = f.Header.Get("Content-Type")
-		if !IsValidContentType(content) {
+		if !service.IsValidContentType(content) {
 			httpError(w, "Not Allowed Content Type of the files", http.StatusUnsupportedMediaType)
 			logger.Error(err.Error(), "Not Allowed Content Type of the file")
 			return
@@ -144,24 +145,23 @@ func CreateArchive(w http.ResponseWriter, r *http.Request, logger *slog.Logger) 
 		logger.Error(err.Error(), "method", r.Method, "uri", r.RequestURI)
 		return
 	}
-
-
-	w.WriteHeader(http.StatusOK)
+	defer os.Remove(zip.Name())
 	w.Header().Set("Content-Type", "application/zip")
-	http.ServeFile(w, r, zip.Name())
+	w.Header().Set("Content-Disposition", `attachment; filename="archive.zip"`)
+	w.WriteHeader(http.StatusOK)
 
-}
-
-func IsValidContentType(contentType string) bool {
-	AllowedTypes := map[string]bool{
-		"application/xml": true,
-		"image/jpeg":      true,
-		"image/png":       true,
-		"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true,
+	z, err := os.ReadFile(zip.Name())
+	if err != nil {
+		serverError(w, "Internal Server Error")
+		logger.Error(err.Error(), "method", r.Method, "uri", r.RequestURI)
+		return
 	}
-	return AllowedTypes[contentType]
+	
+	json.NewEncoder(w).Encode(z)
 
 }
+
+
 
 func ArchiveSend(w http.ResponseWriter, r *http.Request, logger *slog.Logger) {
 	w.Write([]byte("archive send"))
