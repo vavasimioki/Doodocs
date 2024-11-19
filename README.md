@@ -3,6 +3,16 @@
 This README provides clear instructions for interacting with the API using `curl` commands.
 
 ---
+
+## 1.Usage
+```bash
+go get github.com/go-yaml/yaml v2.1.0+incompatible
+go get github.com/go-yaml/yaml v2.1.0+incompatible
+
+## 2.Usage
+```bash
+go run ./cmd 
+
 ## Retrieve Archive Info
 
 Get information about an archive file.
