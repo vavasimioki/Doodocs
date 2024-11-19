@@ -22,8 +22,8 @@ curl -i -X POST http://localhost:8000/api/archive/info \
     -F "file=@/path/to/your/file.zip"
 
 
- my case: (curl -i -X POST --form "files[]=@/Users/asemospanova/Downloads/IMG_5604.JPG;type=image/jpeg" \
- --form "files[]=@/Users/asemospanova/Downloads/IMG_5604.JPG;type=image/jpeg"   http://localhost:8000/api/archive/create)
+ my case: (curl -i -X POST   http://localhost:8000/api/archive/info \
+ -F "file=@/Users/asemospanova/Downloads/net-cat-master.zip)
 
 
 ## Create ZIP file
@@ -33,9 +33,6 @@ curl -X POST http://localhost:8000/api/archive/create \
     --form "files[]=@/path/to/file1.jpg;type=image/jpeg" \
     --form "files[]=@/path/to/file2.jpg;type=image/jpeg"
 
-  my case:  (curl -X POST --form \
- "files[]=@/Users/asemospanova/Downloads/Tengizchevroil.docx;type=application/vnd.openxmlformats-officedocument.wordprocessingml.document"\
-  http://localhost:8000/api/archive/create)
 
  (curl -X POST --form "files[]=@/Users/asemospanova/Downloads/IMG_5604.JPG;type=image/jpeg" \
  --form "files[]=@/Users/asemospanova/Downloads/IMG_5604.JPG;type=image/jpeg"\
