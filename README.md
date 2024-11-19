@@ -22,7 +22,8 @@ curl -i -X POST http://localhost:8000/api/archive/info \
     -F "file=@/path/to/your/file.zip"
 
 
- my case: (curl -i -X POST   --form "files[]=@/Users/asemospanova/Downloads/IMG_5604.JPG;type=image/jpeg"   --form "files[]=@/Users/asemospanova/Downloads/IMG_5604.JPG;type=image/jpeg"   http://localhost:8000/api/archive/create)
+ my case: (curl -i -X POST --form "files[]=@/Users/asemospanova/Downloads/IMG_5604.JPG;type=image/jpeg" \
+ --form "files[]=@/Users/asemospanova/Downloads/IMG_5604.JPG;type=image/jpeg"   http://localhost:8000/api/archive/create)
 
 
 ## Create ZIP file
@@ -32,9 +33,13 @@ curl -X POST http://localhost:8000/api/archive/create \
     --form "files[]=@/path/to/file1.jpg;type=image/jpeg" \
     --form "files[]=@/path/to/file2.jpg;type=image/jpeg"
 
-  my case:  (curl -X POST --form "files[]=@/Users/asemospanova/Downloads/Tengizchevroil.docx;type=application/vnd.openxmlformats-officedocument.wordprocessingml.document" http://localhost:8000/api/archive/create)
+  my case:  (curl -X POST --form \
+ "files[]=@/Users/asemospanova/Downloads/Tengizchevroil.docx;type=application/vnd.openxmlformats-officedocument.wordprocessingml.document"\
+  http://localhost:8000/api/archive/create)
 
-    (curl -X POST   --form "files[]=@/Users/asemospanova/Downloads/IMG_5604.JPG;type=image/jpeg"   --form "files[]=@/Users/asemospanova/Downloads/IMG_5604.JPG;type=image/jpeg"   http://localhost:8000/api/archive/create)
+ (curl -X POST --form "files[]=@/Users/asemospanova/Downloads/IMG_5604.JPG;type=image/jpeg" \
+ --form "files[]=@/Users/asemospanova/Downloads/IMG_5604.JPG;type=image/jpeg"\
+ http://localhost:8000/api/archive/create)
 
 ## Send To Mails
 Get File, emails than send file to them
@@ -45,6 +50,9 @@ curl -X POST http://localhost:8000/api/archive/mail/send \
     -F "file=@/path/to/document.docx;type=application/vnd.openxmlformats-officedocument.wordprocessingml.document" \
     -F "emails=email1@example.com,email2@example.com"
 
-my case: (curl -X POST   http://localhost:8000/api/archive/mail/send -H "Content-Type: multipart/form-data" -F "file=@/Users/asemospanova/Downloads/Tengizchevroil.docx;type=application/vnd.openxmlformats-officedocument.wordprocessingml.document" -F "emails=vavasimioki117@gmail.com,vavasimioki117@gmail.com")
+my case: (curl -X POST   http://localhost:8000/api/archive/mail/send
+ -H "Content-Type: multipart/form-data" \
+ -F "file=@/Users/asemospanova/Downloads/Tengizchevroil.docx;type=application/vnd.openxmlformats-officedocument.wordprocessingml.document" \
+ -F "emails=vavasimioki117@gmail.com,vavasimioki117@gmail.com")
 
 
