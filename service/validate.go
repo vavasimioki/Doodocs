@@ -10,3 +10,11 @@ func IsValidContentType(contentType string) bool {
 	return AllowedTypes[contentType]
 
 }
+func IsValidContentTypeForMail(contentType string) bool {
+	AllowedTypes := map[string]bool{
+		"application/pdf": true,
+		"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true,
+	}
+	return AllowedTypes[contentType]
+
+}

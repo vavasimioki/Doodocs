@@ -1,8 +1,9 @@
 package models
 
 type EmailsList struct {
-	Email string `json:"email"`
+	Email []string `json:"email"`
 }
-type File struct{
-  Filename string `json:"filename"`
+type FileDitail struct {
+	Contenttype string `json:"content-type"`
+	Filename    string `json:"filename"`
 }

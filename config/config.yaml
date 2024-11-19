@@ -1,0 +1,4 @@
+  port: "587"
+  host: "smtp.gmail.com"
+  user: "ospanova.asem.fm@gmail.com"
+  password: "bjsjwvjsavuxgezg"
